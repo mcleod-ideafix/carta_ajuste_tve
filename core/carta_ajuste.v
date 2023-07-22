@@ -127,6 +127,7 @@ module carta_ajuste_tve_50hz_pal (
         hcont <= hcont + 1;
     end    
     
+    // Los registros del pipeline.
     reg [10:0] x [1:ETAPAS_PIPELINE];
     reg [10:0] y [1:ETAPAS_PIPELINE];
     reg       hs [1:ETAPAS_PIPELINE];
@@ -150,6 +151,7 @@ module carta_ajuste_tve_50hz_pal (
       end
     end
         
+    // Macros para manejar los registros del pipeline más fácilmente    
     `define ETP 1
     `define xa   x[`ETP]
     `define ya   y[`ETP]
@@ -394,6 +396,9 @@ module carta_ajuste_tve_50hz_pal (
       `gp  <= `ga;
       `bp  <= `ba;
 
+       // Para dibujar el círculo uso una pequeña ROM de 256 posiciones
+       // conteniendo una cuarta parte de su perímetro.
+       
        if (`ya >= 32 && `ya <= 543 && `xa >= 127 && `xa <= 639) begin
          if (`ya <= 207 && `xa <= 383) begin
            if (`xa >= (383 - circulo[`ya-32])) begin
@@ -468,6 +473,10 @@ module carta_ajuste_tve_50hz_pal (
       `gp  <= `ga;
       `bp  <= `ba;
 
+      // La barra de frecuencias, de 400 pixeles de ancho, la he generado aparte
+      // de acuerdo a las especificaciones de la Wikipedia, y da una figura que
+      // no se parece del todo a la que aparece en la propia Wikipedia.
+      
       if (`xa >= 184 && `xa <= 583 && `ya >= 368 && `ya <= 447) begin
         `rp <= barras[`xa-184];
         `gp <= barras[`xa-184];
@@ -488,6 +497,9 @@ module carta_ajuste_tve_50hz_pal (
       `rp  <= `ra;
       `gp  <= `ga;
       `bp  <= `ba;
+
+      // Cuadros de color y B/N, dentro del círculo
+      // excluyendo los colores en los bordes del mismo
 
       if (`xa >= 224 && `xa < 543 && `ya >= 208 && `ya < 368) begin
         if (`xa < 224+80) begin
@@ -555,6 +567,10 @@ module carta_ajuste_tve_50hz_pal (
       `gp  <= `ga;
       `bp  <= `ba;
 
+      // Un rectángulo negro sencillo, con una linea de 2 pixeles de grosor
+      // que curiosamente, no aparece en la representación de la carta publicada
+      // en la Wikipedia.
+
       if (`xa >= 244 && `ya >= 448 && `xa < 244+280 && `ya <= 488) begin
         `rp <= 8'h00;
         `gp <= 8'h00;
@@ -587,6 +603,8 @@ module carta_ajuste_tve_50hz_pal (
         `bp <= 8'hFF;
       end
       
+      // En el ciclo anterior a su uso, vamos ya leyendo el pixel del logo de TVE
+      
       logopixel <= tve[(`ya - 109)*256 + (`xa - 305)];
       
       `undef ETP   
@@ -603,6 +621,8 @@ module carta_ajuste_tve_50hz_pal (
       `rp  <= `ra;
       `gp  <= `ga;
       `bp  <= `ba;
+      
+      // Si toca dibujar un pixel del logotipo de TVE, se hace. 
       
       if (`xa >= 305 && `ya >= 109 && `xa < (305+160) && `ya < 189) begin
         if (logopixel == 1'b1) begin
@@ -656,6 +676,10 @@ module carta_ajuste_tve_50hz_pal (
       `rp  <= `ra;
       `gp  <= `ga;
       `bp  <= `ba;
+      
+      // Todo lo que esté fuera de la zona activa, hace que se
+      // apague el pixel. En simulación uso un color azul apagado
+      // para generar la imagen. En hard real, debe ser negro.
       
       if (`ya == 11'h7FF || `xa == 11'h7FF) begin
         `rp <= 8'h00;
